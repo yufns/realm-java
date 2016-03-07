@@ -1054,7 +1054,7 @@ std::unique_ptr<Query> getHandoverQuery (jlong bgSharedGroupPtr, jlong replicati
 
     std::unique_ptr<Query> query = SG(bgSharedGroupPtr)->import_from_handover(std::move(handoverQuery));
     if (advanceToLatestVersion && isDifferentVersions) {
-        LangBindHelper::advance_read(*SG(bgSharedGroupPtr), *CH(replicationPtr));
+        LangBindHelper::advance_read(*SG(bgSharedGroupPtr));
     }
 
     return query;
@@ -1165,7 +1165,7 @@ JNIEXPORT jlongArray JNICALL Java_io_realm_internal_TableQuery_nativeBatchUpdate
         }
 
         // Step2: Bring the queries into the latest shared group version
-        LangBindHelper::advance_read(*SG(bgSharedGroupPtr), *CH(replicationPtr));
+        LangBindHelper::advance_read(*SG(bgSharedGroupPtr));
 
         // Step3: Run & export the queries against the latest shared group
         for (size_t i = 0; i < number_of_queries; ++i) {
