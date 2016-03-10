@@ -1,3 +1,9 @@
+## 0.88.1
+
+### Enhancements
+
+* Support for compacting encrypted Realms (#1033).
+
 ## 0.88.0
 
 * Updated Realm Core to 0.97.0.
@@ -34,7 +40,6 @@
 * "realm" and "row" can be used as field name in model classes (#2255).
 * RealmResults.size() now returns Integer.MAX_VALUE when actual size is greater than Integer.MAX_VALUE (#2129).
 * Removed allowBackup from AndroidManifest (#2307).
-* Support for compacting encrypted Realms (#1033).
 
 ### Bug fixes
 
