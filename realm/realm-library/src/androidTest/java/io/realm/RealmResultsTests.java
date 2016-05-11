@@ -1002,4 +1002,18 @@ public class RealmResultsTests extends CollectionTests {
             }
         });
     }
+
+    @Test
+    public void deleteAndDeleteAll() {
+        RealmResults<AllTypes> allTypes = realm.where(AllTypes.class).findAll();
+
+        realm.beginTransaction();
+        // remove one object
+        allTypes.get(0).deleteFromRealm();
+        // remove the rest
+        allTypes.deleteAllFromRealm();
+        realm.commitTransaction();
+
+        assertEquals(0, realm.where(AllTypes.class).findAll().size());
+    }
 }
