@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 
 import io.realm.internal.Keep;
 import io.realm.internal.Mixed;
+import io.realm.internal.Property;
 
 /**
  * List of the types used by Realm's underlying storage engine.
@@ -31,18 +32,20 @@ import io.realm.internal.Mixed;
 @Keep
 public enum RealmFieldType {
     // Make sure numbers match with <realm/column_type.hpp>
-    INTEGER(0),
-    BOOLEAN(1),
-    STRING(2),
-    BINARY(4),
+    INTEGER(Property.PROPERTY_TYPE_INT),
+    BOOLEAN(Property.PROPERTY_TYPE_BOOL),
+    STRING(Property.PROPERTY_TYPE_STRING),
+    BINARY(Property.PROPERTY_TYPE_DATA),
+    // FIXME: REMOVE TABLE
     UNSUPPORTED_TABLE(5),
-    UNSUPPORTED_MIXED(6),
+    UNSUPPORTED_MIXED(Property.PROPERTY_TYPE_ANY),
+    // FIXME: REMOVE UNSUPPORTED_DATE
     UNSUPPORTED_DATE(7),
-    DATE(8),
-    FLOAT(9),
-    DOUBLE(10),
-    OBJECT(12),
-    LIST(13);
+    DATE(Property.PROPERTY_TYPE_DATE),
+    FLOAT(Property.PROPERTY_TYPE_FLOAT),
+    DOUBLE(Property.PROPERTY_TYPE_DOUBLE),
+    OBJECT(Property.PROPERTY_TYPE_OBJECT),
+    LIST(Property.PROPERTY_TYPE_ARRAY);
     // BACKLINK(14); Not exposed until needed
 
     // Primitive array for fast mapping between between native values and their Realm type.
