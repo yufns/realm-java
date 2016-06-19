@@ -29,6 +29,8 @@ class Realm implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+        def realmExtension = project.extensions.create("realm", RealmExtension.class)
+
         // Make sure the project is either an Android application or library
         def isAndroidApp = project.plugins.withType(AppPlugin)
         def isAndroidLib = project.plugins.withType(LibraryPlugin)
@@ -50,7 +52,8 @@ class Realm implements Plugin<Project> {
 
         project.android.registerTransform(new RealmTransformer(project))
         if (!isAndroidLib) {
-            project.android.registerTransform(new RealmOptionalAPITransformer())
+            def optionalAPITransformer = new RealmOptionalAPITransformer({ realmExtension.enableOptionalAPITransformer })
+            project.android.registerTransform(optionalAPITransformer)
         }
         project.repositories.add(project.getRepositories().jcenter())
         project.dependencies.add("compile", "io.realm:realm-android-library:${Version.VERSION}")
@@ -74,4 +77,8 @@ class Realm implements Plugin<Project> {
             return false
         }
     }
+}
+
+class RealmExtension {
+    def enableOptionalAPITransformer = true
 }

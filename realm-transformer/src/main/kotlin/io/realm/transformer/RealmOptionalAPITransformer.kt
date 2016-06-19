@@ -32,7 +32,7 @@ import io.realm.transformer.util.createClassPool
 import org.slf4j.LoggerFactory
 import java.util.HashSet
 
-class RealmOptionalAPITransformer : Transform() {
+class RealmOptionalAPITransformer(val isEnabled: () -> Boolean) : Transform() {
 
     private val logger = LoggerFactory.getLogger("realm-logger")
     private val transformerName = "realm-optional-api"
@@ -43,7 +43,9 @@ class RealmOptionalAPITransformer : Transform() {
 
     override fun getInputTypes(): MutableSet<ContentType>? = ImmutableSet.of(DefaultContentType.CLASSES)
 
-    override fun getScopes(): MutableSet<Scope>? = ImmutableSet.of(Scope.EXTERNAL_LIBRARIES)
+    override fun getScopes(): MutableSet<Scope>? =
+            if (isEnabled()) ImmutableSet.of(Scope.EXTERNAL_LIBRARIES)
+            else ImmutableSet.of()
 
     override fun getReferencedScopes(): MutableSet<Scope>? = ImmutableSet.of(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS,
             Scope.SUB_PROJECTS, Scope.SUB_PROJECTS_LOCAL_DEPS, Scope.EXTERNAL_LIBRARIES)
@@ -53,6 +55,7 @@ class RealmOptionalAPITransformer : Transform() {
                            referencedInputs: MutableCollection<TransformInput>?,
                            outputProvider: TransformOutputProvider?,
                            isIncremental: Boolean) {
+        if (!isEnabled()) return
 
         val classNames = HashSet<String>()
         inputs!!.appendThisToClassNames(classNames)
