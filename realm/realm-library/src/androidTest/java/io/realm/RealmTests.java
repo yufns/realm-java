@@ -177,6 +177,7 @@ public class RealmTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void getInstance_nullDir() {
+        //noinspection deprecation
         Realm.getInstance(new RealmConfiguration.Builder((File) null).build());
     }
 
@@ -184,6 +185,7 @@ public class RealmTests {
     public void getInstance_writeProtectedDir() {
         File folder = new File("/");
         thrown.expect(IllegalArgumentException.class);
+        //noinspection deprecation
         Realm.getInstance(new RealmConfiguration.Builder(folder).build());
     }
 
@@ -209,6 +211,7 @@ public class RealmTests {
         assertTrue(realmFile.setWritable(false));
 
         thrown.expect(RealmIOException.class);
+        //noinspection deprecation
         Realm.getInstance(new RealmConfiguration.Builder(folder).name(REALM_FILE).build());
     }
 
@@ -843,11 +846,10 @@ public class RealmTests {
         long seed = 20;
         Random random = new Random(seed);
 
-        int random_value = 0;
+        int random_value;
 
         String test_char = "";
         String test_char_old = "";
-        String get_data = "";
 
         for (int i = 0; i < 1000; i++) {
             random_value = random.nextInt(25);
@@ -1003,7 +1005,7 @@ public class RealmTests {
         try {
             assertTrue(Realm.compactRealm(realmConfig));
             fail();
-        } catch (IllegalArgumentException expected) {
+        } catch (IllegalArgumentException ignored) {
         }
     }
 
@@ -1018,7 +1020,7 @@ public class RealmTests {
         try {
             assertTrue(Realm.compactRealm(realmConfig));
             fail();
-        } catch (IllegalArgumentException expected) {
+        } catch (IllegalArgumentException ignored) {
         }
     }
 
@@ -1101,9 +1103,9 @@ public class RealmTests {
 
         AllTypes allTypes = new AllTypes();
         allTypes.setColumnString("String");
-        allTypes.setColumnLong(1l);
-        allTypes.setColumnFloat(1f);
-        allTypes.setColumnDouble(1d);
+        allTypes.setColumnLong(1L);
+        allTypes.setColumnFloat(1F);
+        allTypes.setColumnDouble(1D);
         allTypes.setColumnBoolean(true);
         allTypes.setColumnDate(date);
         allTypes.setColumnBinary(new byte[]{1, 2, 3});
@@ -1236,6 +1238,7 @@ public class RealmTests {
     @Test
     public void copyToRealm_stringPrimaryKeyIsNull() {
         final long SECONDARY_FIELD_VALUE = 34992142L;
+        //noinspection RedundantCast
         TestHelper.addStringPrimaryKeyObjectToTestRealm(realm, (String) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsString> results = realm.where(PrimaryKeyAsString.class).findAll();
@@ -1244,6 +1247,7 @@ public class RealmTests {
         assertEquals(SECONDARY_FIELD_VALUE, results.first().getId());
     }
 
+    @SuppressWarnings("RedundantCast")
     @Test
     public void copyToRealm_boxedNumberPrimaryKeyIsNull() {
         final String SECONDARY_FIELD_VALUE = "nullNumberPrimaryKeyObj";
@@ -1262,6 +1266,7 @@ public class RealmTests {
         }
     }
 
+    @SuppressWarnings("RedundantCast")
     @Test
     public void copyToRealm_duplicatedNullPrimaryKeyThrows() {
         final String[] PRIMARY_KEY_TYPES = {"String", "BoxedByte", "BoxedShort", "BoxedInteger", "BoxedLong"};
@@ -1380,6 +1385,7 @@ public class RealmTests {
     public void copyToRealmOrUpdate_stringPrimaryKeyFieldIsNull() {
         final long SECONDARY_FIELD_VALUE = 2192841L;
         final long SECONDARY_FIELD_UPDATED = 44887612L;
+        //noinspection RedundantCast
         PrimaryKeyAsString nullPrimaryKeyObj = TestHelper.addStringPrimaryKeyObjectToTestRealm(realm, (String) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsString> result = realm.where(PrimaryKeyAsString.class).findAll();
@@ -1400,6 +1406,7 @@ public class RealmTests {
     public void copyToRealmOrUpdate_boxedBytePrimaryKeyFieldIsNull() {
         final String SECONDARY_FIELD_VALUE = "nullBytePrimaryKeyObj";
         final String SECONDARY_FIELD_UPDATED = "nullBytePrimaryKeyObjUpdated";
+        //noinspection RedundantCast
         PrimaryKeyAsBoxedByte nullPrimaryKeyObj = TestHelper.addBytePrimaryKeyObjectToTestRealm(realm, (Byte) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsBoxedByte> result = realm.where(PrimaryKeyAsBoxedByte.class).findAll();
@@ -1420,6 +1427,7 @@ public class RealmTests {
     public void copyToRealmOrUpdate_boxedShortPrimaryKeyFieldIsNull() {
         final String SECONDARY_FIELD_VALUE = "nullShortPrimaryKeyObj";
         final String SECONDARY_FIELD_UPDATED = "nullShortPrimaryKeyObjUpdated";
+        //noinspection RedundantCast
         PrimaryKeyAsBoxedShort nullPrimaryKeyObj = TestHelper.addShortPrimaryKeyObjectToTestRealm(realm, (Short) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsBoxedShort> result = realm.where(PrimaryKeyAsBoxedShort.class).findAll();
@@ -1440,6 +1448,7 @@ public class RealmTests {
     public void copyToRealmOrUpdate_boxedIntegerPrimaryKeyFieldIsNull() {
         final String SECONDARY_FIELD_VALUE = "nullIntegerPrimaryKeyObj";
         final String SECONDARY_FIELD_UPDATED = "nullIntegerPrimaryKeyObjUpdated";
+        //noinspection RedundantCast
         PrimaryKeyAsBoxedInteger nullPrimaryKeyObj = TestHelper.addIntegerPrimaryKeyObjectToTestRealm(realm, (Integer) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsBoxedInteger> result = realm.where(PrimaryKeyAsBoxedInteger.class).findAll();
@@ -1460,6 +1469,7 @@ public class RealmTests {
     public void copyToRealmOrUpdate_boxedLongPrimaryKeyFieldIsNull() {
         final String SECONDARY_FIELD_VALUE = "nullLongPrimaryKeyObj";
         final String SECONDARY_FIELD_UPDATED = "nullLongPrimaryKeyObjUpdated";
+        //noinspection RedundantCast
         PrimaryKeyAsBoxedLong nullPrimaryKeyObj = TestHelper.addLongPrimaryKeyObjectToTestRealm(realm, (Long) null, SECONDARY_FIELD_VALUE);
 
         RealmResults<PrimaryKeyAsBoxedLong> result = realm.where(PrimaryKeyAsBoxedLong.class).findAll();
@@ -1962,7 +1972,7 @@ public class RealmTests {
         File tempDirRenamed = new File(configFactory.getRoot(), "delete_test_dir_2");
         assertTrue(tempDir.mkdir());
 
-        final RealmConfiguration configuration = new RealmConfiguration.Builder(tempDir).build();
+        final RealmConfiguration configuration = new RealmConfiguration.Builder(context, tempDir).build();
 
         final CountDownLatch bgThreadReadyLatch = new CountDownLatch(1);
         final CountDownLatch readyToCloseLatch = new CountDownLatch(1);
