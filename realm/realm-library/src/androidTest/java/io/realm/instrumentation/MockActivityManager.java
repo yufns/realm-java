@@ -93,6 +93,7 @@ public class MockActivityManager {
     private void deleteWeaklyReachableReferences() {
         Reference<? extends Lifecycle> weakReference;
         while ((weakReference = queue.poll()) != null ) { // Does not wait for a reference to become available.
+            //noinspection SuspiciousMethodCalls
             references.remove(weakReference);
         }
     }

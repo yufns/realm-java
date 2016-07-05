@@ -16,7 +16,7 @@
 
 package io.realm.instrumentation;
 
-public interface Lifecycle {
+interface Lifecycle {
     void onStart ();
     void onStop ();
 }

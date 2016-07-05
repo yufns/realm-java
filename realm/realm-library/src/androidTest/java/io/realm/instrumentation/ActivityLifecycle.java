@@ -22,12 +22,12 @@ import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import io.realm.entities.AllTypes;
 
-public class ActivityLifecycle implements Lifecycle, RealmChangeListener<RealmResults<AllTypes>> {
+class ActivityLifecycle implements Lifecycle, RealmChangeListener<RealmResults<AllTypes>> {
     private final RealmConfiguration realmConfiguration;
     private Realm realm;
     private RealmResults<AllTypes> mAllTypes;
 
-    public ActivityLifecycle (RealmConfiguration realmConfiguration) {
+    ActivityLifecycle (RealmConfiguration realmConfiguration) {
         this.realmConfiguration = realmConfiguration;
     }
 
