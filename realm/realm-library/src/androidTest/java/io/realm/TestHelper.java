@@ -25,7 +25,6 @@ import org.junit.Assert;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -57,7 +56,6 @@ import io.realm.internal.Table;
 import io.realm.internal.TableOrView;
 import io.realm.internal.async.RealmThreadPoolExecutor;
 import io.realm.internal.log.Logger;
-import io.realm.rule.TestRealmConfigurationFactory;
 
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
@@ -343,51 +341,6 @@ public class TestHelper {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * @deprecated Use {@link TestRealmConfigurationFactory#createConfiguration()} instead.
-     */
-    @Deprecated
-    public static RealmConfiguration createConfiguration(Context context) {
-        return createConfiguration(context, Realm.DEFAULT_REALM_NAME);
-    }
-
-    /**
-     * @deprecated Use {@link TestRealmConfigurationFactory#createConfiguration(String)} instead.
-     */
-    @Deprecated
-    public static RealmConfiguration createConfiguration(Context context, String name) {
-        return createConfiguration(context.getFilesDir(), name);
-    }
-
-    /**
-     * @deprecated Use {@link TestRealmConfigurationFactory#createConfiguration(String)} instead.
-     */
-    @Deprecated
-    public static RealmConfiguration createConfiguration(File folder, String name) {
-        return createConfiguration(folder, name, null);
-    }
-
-    /**
-     * @deprecated Use {@link TestRealmConfigurationFactory#createConfiguration(String, byte[])} instead.
-     */
-    @Deprecated
-    public static RealmConfiguration createConfiguration(Context context, String name, byte[] key) {
-        return createConfiguration(context.getFilesDir(), name, key);
-    }
-
-    /**
-     * @deprecated Use {@link TestRealmConfigurationFactory#createConfiguration(String, byte[])} instead.
-     */
-    @Deprecated
-    public static RealmConfiguration createConfiguration(File dir, String name, byte[] key) {
-        RealmConfiguration.Builder config = new RealmConfiguration.Builder(dir).name(name);
-        if (key != null) {
-            config.encryptionKey(key);
-        }
-
-        return config.build();
     }
 
     /**
