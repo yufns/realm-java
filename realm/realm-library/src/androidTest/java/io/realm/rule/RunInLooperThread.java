@@ -24,7 +24,6 @@ import org.junit.runners.model.Statement;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.annotation.Annotation;
 import java.util.LinkedList;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;

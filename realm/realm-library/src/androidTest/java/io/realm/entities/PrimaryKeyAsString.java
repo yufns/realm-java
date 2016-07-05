@@ -18,7 +18,6 @@ package io.realm.entities;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import io.realm.objectid.NullPrimaryKey;
 
 public class PrimaryKeyAsString extends RealmObject {
 
