@@ -87,27 +87,34 @@ public:
             if (protocol_error == ProtocolError::bad_server_file_ident
                 || protocol_error == ProtocolError::bad_client_file_ident
                 || protocol_error == ProtocolError::bad_server_version
-                || protocol_error == ProtocolError::diverging_histories) {
+                || protocol_error == ProtocolError::diverging_histories
+                || protocol_error == ProtocolError::token_expired) {
 
+                realm::jni_util::Log::i("A client reset is scheduled for the next app start");
+                auto template_string = realm::util::create_timestamped_template("recovered_realm");
+                realm::jni_util::Log::i("REC: %1", template_string);
+                auto rec_path = realm::SyncManager::shared().recovery_directory_path();
+                realm::jni_util::Log::i("BASE PATH : %1", rec_path);
                 // Add a SyncFileActionMetadata marking the Realm as needing to be deleted.
-                auto recovery_path = realm::util::reserve_unique_file_name(
-                        realm::SyncManager::shared().recovery_directory_path(),
-                        realm::util::create_timestamped_template("recovered_realm"));
+                auto recovery_path = realm::util::reserve_unique_file_name(rec_path,
+                        template_string);
                 auto original_path = local_realm_path;
 
-                realm::jni_util::Log::d("A client reset is scheduled for the next app start");
+                realm::jni_util::Log::i("Recovery path: %1 Original path: %2", recovery_path, original_path);
+
                 realm::SyncManager::shared().perform_metadata_update([original_path = std::move(original_path),
                         recovery_path = std::move(recovery_path)](const auto &manager) {
                     realm::SyncFileActionMetadata(manager,
                                                   realm::SyncFileActionMetadata::Action::HandleRealmForClientReset,
                                                   original_path,
-                                                  nullptr,
-                                                  nullptr,
+                                                  "",
+                                                  "",
                                                   realm::util::Optional<std::string>(
                                                           std::move(recovery_path)));
                 });
 
             } else {
+                realm::jni_util::Log::i("Forwarding error %1 to Java", error_code.value());
                 auto session_ref = weak_session_ref.lock();
                 if (session_ref) {
                         session_ref.get()->call_with_local_ref([&](JNIEnv* local_env, jobject obj) {
