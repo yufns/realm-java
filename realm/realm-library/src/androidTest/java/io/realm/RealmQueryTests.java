@@ -2710,7 +2710,8 @@ public class RealmQueryTests {
     private static final List<RealmFieldType> SUPPORTED_IS_EMPTY_TYPES = Arrays.asList(
             RealmFieldType.STRING,
             RealmFieldType.BINARY,
-            RealmFieldType.LIST);
+            RealmFieldType.LIST,
+            RealmFieldType.BACKLINK);
 
     private static final List<RealmFieldType> NOT_SUPPORTED_IS_EMPTY_TYPES;
     static {

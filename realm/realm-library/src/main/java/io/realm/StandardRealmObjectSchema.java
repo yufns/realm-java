@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import io.realm.annotations.Required;
-import io.realm.internal.RealmProxyMediator;
 import io.realm.internal.Table;
 
 
@@ -563,10 +562,12 @@ class StandardRealmObjectSchema extends RealmObjectSchema {
 
     @Override
     StandardRealmObjectSchema add(String name, RealmFieldType type, RealmObjectSchema linkedTo) {
-        table.addColumnLink(
-                type,
-                name,
-                realm.getSharedRealm().getTable(StandardRealmSchema.TABLE_PREFIX + linkedTo.getClassName()));
+        if (type != RealmFieldType.BACKLINK) { // we don't add backlink here
+            table.addColumnLink(
+                    type,
+                    name,
+                    realm.getSharedRealm().getTable(StandardRealmSchema.TABLE_PREFIX + linkedTo.getClassName()));
+        }
         return this;
     }
 

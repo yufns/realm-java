@@ -632,6 +632,9 @@ public class RealmProxyClassGenerator {
                                 fieldName, genericTypeSimpleName);
             }
         }
+        for (Backlink backlink : metadata.getBacklinkFields()) {
+            emitCreateSchemaBacklink(writer, backlink);
+        }
         writer.emitStatement("return realmObjectSchema");
         writer.endControlFlow();
         writer.emitStatement("return realmSchema.get(\"" + this.simpleClassName + "\")");
@@ -899,6 +902,20 @@ public class RealmProxyClassGenerator {
         emitMigrationNeededException(writer, "\"Source field '%s.%s' for @LinkingObjects field '%s.%s' has wrong type '\" + backlinkTargetTable.getName() + \"'\")",
                 fullyQualifiedSourceClass, sourceField, targetClass, targetField);
         writer.endControlFlow();
+    }
+
+    private void emitCreateSchemaBacklink(JavaWriter writer, Backlink backlink) throws IOException {
+        String targetField = backlink.getTargetField();
+        String targetClass = backlink.getTargetClass();
+
+        String sourceClass = backlink.getSimpleSourceClass();
+
+        writer.beginControlFlow("if (!realmSchema.contains(\"%s\"))", sourceClass);
+        writer.emitStatement("%s%s.createRealmObjectSchema(realmSchema)", sourceClass, Constants.PROXY_SUFFIX);
+        writer.endControlFlow();
+
+        writer.emitStatement("realmObjectSchema.add(\"%s\", RealmFieldType.BACKLINK, realmSchema.get(\"%s\"))",
+                targetField, sourceClass);
     }
 
     //@formatter:off

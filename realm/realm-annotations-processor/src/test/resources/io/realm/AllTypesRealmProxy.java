@@ -422,6 +422,10 @@ public class AllTypesRealmProxy extends some.test.AllTypes
                 AllTypesRealmProxy.createRealmObjectSchema(realmSchema);
             }
             realmObjectSchema.add("columnRealmList", RealmFieldType.LIST, realmSchema.get("AllTypes"));
+            if (!realmSchema.contains("AllTypes")) {
+                AllTypesRealmProxy.createRealmObjectSchema(realmSchema);
+            }
+            realmObjectSchema.add("parentObjects", RealmFieldType.BACKLINK, realmSchema.get("AllTypes"));
             return realmObjectSchema;
         }
         return realmSchema.get("AllTypes");
