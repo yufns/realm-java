@@ -24,6 +24,16 @@
 #include "util.hpp"
 using namespace realm;
 
+JNIEXPORT jlong JNICALL
+Java_io_realm_OsRealmSchema_nativeCreate(JNIEnv *env, jclass) {
+    TR_ENTER()
+    try {
+        auto* schema = new Schema();
+        return reinterpret_cast<jlong>(schema);
+    }
+    CATCH_STD()
+    return 0;
+}
 
 JNIEXPORT jlong JNICALL Java_io_realm_OsRealmSchema_nativeCreateFromList(JNIEnv* env, jclass,
                                                                        jlongArray objectSchemaPtrs_)

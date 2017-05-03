@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.realm.RealmConfiguration;
+import io.realm.RealmMigration;
 import io.realm.internal.android.AndroidCapabilities;
 import io.realm.internal.android.AndroidRealmNotifier;
 
@@ -267,6 +268,10 @@ public final class SharedRealm implements Closeable, NativeObject {
         return nativeGetVersion(nativePtr);
     }
 
+    public RealmConfiguration getConfiguration() {
+        return configuration;
+    }
+
     // FIXME: This should be removed, migratePrimaryKeyTableIfNeeded is using it which should be in Object Store instead?
     long getGroupNative() {
         return nativeReadGroup(nativePtr);
@@ -343,10 +348,19 @@ public final class SharedRealm implements Closeable, NativeObject {
 
     /**
      * Updates the underlying schema based on the schema description.
+     * If migration is required, the migration object is used.
+     */
+    public void updateSchema(long schemaNativePointer, long version, RealmMigration migration) {
+        nativeUpdateSchema(nativePtr, schemaNativePointer, version, migration);
+    }
+
+
+    /**
+     * Updates the underlying schema based on the schema description.
      * Calling this method must be done from inside a write transaction.
      */
     public void updateSchema(long schemaNativePointer, long version) {
-        nativeUpdateSchema(nativePtr, schemaNativePointer, version);
+        nativeUpdateSchema(nativePtr, schemaNativePointer, version, null);
     }
 
     public void setAutoRefresh(boolean enabled) {
@@ -520,7 +534,7 @@ public final class SharedRealm implements Closeable, NativeObject {
 
     private static native boolean nativeCompact(long nativeSharedRealmPtr);
 
-    private static native void nativeUpdateSchema(long nativePtr, long nativeSchemaPtr, long version);
+    private static native void nativeUpdateSchema(long nativePtr, long nativeSchemaPtr, long version, Object migration);
 
     private static native void nativeSetAutoRefresh(long nativePtr, boolean enabled);
 

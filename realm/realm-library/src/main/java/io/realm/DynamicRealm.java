@@ -18,6 +18,7 @@ package io.realm;
 
 import io.realm.exceptions.RealmException;
 import io.realm.exceptions.RealmFileException;
+import io.realm.internal.SharedRealm;
 import io.realm.internal.Table;
 import io.realm.log.RealmLog;
 import rx.Observable;
@@ -47,6 +48,14 @@ public class DynamicRealm extends BaseRealm {
 
     private DynamicRealm(RealmConfiguration configuration) {
         super(configuration);
+    }
+
+    private DynamicRealm(SharedRealm sharedRealm) {
+        super(sharedRealm);
+    }
+
+    public static DynamicRealm fromSharedRealm(SharedRealm sharedRealm) {
+        return new DynamicRealm(sharedRealm);
     }
 
     /**

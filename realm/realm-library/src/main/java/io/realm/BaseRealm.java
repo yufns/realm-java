@@ -88,6 +88,14 @@ abstract class BaseRealm implements Closeable {
         this.schema = new StandardRealmSchema(this);
     }
 
+    // only used during migrations
+    protected BaseRealm(SharedRealm realm) {
+        this.threadId = Thread.currentThread().getId();
+        this.configuration = realm.getConfiguration();
+        this.sharedRealm = realm;
+        this.schema = new StandardRealmSchema(this);
+    }
+
     /**
      * Sets the auto-refresh status of the Realm instance.
      * <p>
@@ -119,7 +127,7 @@ abstract class BaseRealm implements Closeable {
      * <p>
      * WARNING: Calling this on a thread with async queries will turn those queries into synchronous queries.
      * In most cases it is better to use {@link RealmChangeListener}s to be notified about changes to the
-     * Realm on a given thread than it is to use this method. 
+     * Realm on a given thread than it is to use this method.
      *
      * @throws IllegalStateException if attempting to refresh from within a transaction.
      */

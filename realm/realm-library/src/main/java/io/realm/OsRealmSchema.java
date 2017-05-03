@@ -33,7 +33,7 @@ import io.realm.internal.Table;
  * @see RealmMigration
  */
 class OsRealmSchema extends RealmSchema {
-    static final class Creator extends RealmSchema {
+    static final class  Creator extends RealmSchema {
         private final Map<String, RealmObjectSchema> schema = new HashMap<>();
 
         @Override
@@ -102,6 +102,10 @@ class OsRealmSchema extends RealmSchema {
     private final Map<String, RealmObjectSchema> dynamicClassToSchema = new HashMap<>();
 
     private long nativePtr;
+
+    OsRealmSchema() {
+        this.nativePtr = nativeCreate();
+    }
 
     OsRealmSchema(Creator creator) {
         Set<RealmObjectSchema> realmObjectSchemas = creator.getAll();
@@ -211,6 +215,6 @@ class OsRealmSchema extends RealmSchema {
     }
 
     static native long nativeCreateFromList(long[] objectSchemaPtrs);
-
+    static native long nativeCreate();
     static native void nativeClose(long nativePtr);
 }

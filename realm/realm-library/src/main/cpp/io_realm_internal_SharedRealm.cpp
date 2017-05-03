@@ -568,13 +568,38 @@ JNIEXPORT jlong JNICALL Java_io_realm_internal_SharedRealm_nativeGetSnapshotVers
 
 JNIEXPORT void JNICALL Java_io_realm_internal_SharedRealm_nativeUpdateSchema(JNIEnv* env, jclass,
                                                                              jlong shared_realm_ptr, jlong schema_ptr,
-                                                                             jlong version)
+                                                                             jlong version,
+                                                                             jobject migration)
 {
     TR_ENTER_PTR(shared_realm_ptr)
     try {
         auto shared_realm = *(reinterpret_cast<SharedRealm*>(shared_realm_ptr));
         auto* schema = reinterpret_cast<Schema*>(schema_ptr);
-        shared_realm->update_schema(*schema, static_cast<uint64_t>(version), nullptr, true);
+
+        if (migration == nullptr) {
+            shared_realm->update_schema(*schema, static_cast<uint64_t>(version), nullptr, true);
+        }
+        else {
+            JavaMethod migration_function(env, migration, "migrate", "(io/realm/DynamicRealm;JJ)V");
+            Realm::MigrationFunction callback = [=](SharedRealm, SharedRealm realm, Schema &) {
+                auto &config = realm->config();
+                jlong schema_version = static_cast<jlong>(config.schema_version);
+                JavaClass io_realm_dynamicrealm(env, "io/realm/DynamicRealm");
+                JavaMethod fromSharedRealm(env, io_realm_dynamicrealm, "fromSharedRealm",
+                                           "(io/realm/internal/SharedRealm)io/realm/DynamicRealm");
+                jobject dynamic_realm = env->CallStaticObjectMethod(io_realm_dynamicrealm, fromSharedRealm,
+                                                                    reinterpret_cast<jlong>(realm.get()));
+                if (dynamic_realm == nullptr) {
+                    throw std::runtime_error("Cannot get an instance of DynamicRealm.");
+                }
+                env->CallVoidMethod(migration, migration_function, dynamic_realm, schema_version);
+                if (env->ExceptionCheck() == JNI_TRUE) {
+                    env->ExceptionClear();
+                    throw std::invalid_argument("migrate() failed");
+                }
+            };
+            shared_realm->update_schema(std::move(*schema), version, std::move(callback));
+        }
     }
     CATCH_STD()
 }

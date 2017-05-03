@@ -317,25 +317,36 @@ public class Realm extends BaseRealm {
      * @return a {@link Realm} instance.
      */
     static Realm createInstance(RealmConfiguration configuration, ColumnIndices[] globalCacheArray) {
-        try {
-            return createAndValidate(configuration, globalCacheArray);
+        Realm realm = new Realm(configuration);
 
-        } catch (RealmMigrationNeededException e) {
-            if (configuration.shouldDeleteRealmIfMigrationNeeded()) {
-                deleteRealm(configuration);
-            } else {
-                try {
-                    if (configuration.getMigration() != null) {
-                        migrateRealm(configuration, e);
-                    }
-                } catch (FileNotFoundException fileNotFoundException) {
-                    // Should never happen.
-                    throw new RealmFileException(RealmFileException.Kind.NOT_FOUND, fileNotFoundException);
-                }
-            }
+        // TODO: caching - see createAndValidate
 
-            return createAndValidate(configuration, globalCacheArray);
+        realm.beginTransaction();
+        long currentVersion = realm.getVersion();
+        boolean unversioned = currentVersion == UNVERSIONED;
+
+        if (unversioned) {
+            realm.setVersion(configuration.getSchemaVersion());
         }
+
+        final RealmProxyMediator mediator = configuration.getSchemaMediator();
+        final Set<Class<? extends RealmModel>> modelClasses = mediator.getModelClasses();
+
+        OsRealmSchema.Creator realmSchemaTmp = new OsRealmSchema.Creator();
+        // Create all of the tables.
+        for (Class<? extends RealmModel> modelClass : modelClasses) {
+            RealmObjectSchema realmObjectSchema = mediator.createRealmObjectSchema(modelClass, realmSchemaTmp);
+        }
+        OsRealmSchema realmSchema = new OsRealmSchema(realmSchemaTmp);
+
+        if (realm.sharedRealm.requiresMigration(realmSchema.getNativePtr()) && configuration.shouldDeleteRealmIfMigrationNeeded()) {
+            realm.close();
+            deleteRealm(configuration);
+            realm = new Realm(configuration);
+        }
+        realm.sharedRealm.updateSchema(realmSchema.getNativePtr(), currentVersion, configuration.getMigration());
+        realm.commitTransaction();
+        return realm;
     }
 
     private static Realm createAndValidate(RealmConfiguration configuration, ColumnIndices[] globalCacheArray) {
@@ -402,11 +413,16 @@ public class Realm extends BaseRealm {
             final Set<Class<? extends RealmModel>> modelClasses = mediator.getModelClasses();
 
             if (unversioned) {
+                OsRealmSchema.Creator realmSchemaTmp = new OsRealmSchema.Creator();
                 // Create all of the tables.
                 for (Class<? extends RealmModel> modelClass : modelClasses) {
-                    mediator.createRealmObjectSchema(modelClass, realm.getSchema());
+                    RealmObjectSchema realmObjectSchema = mediator.createRealmObjectSchema(modelClass, realmSchemaTmp);
+
                 }
+                OsRealmSchema realmSchema = new OsRealmSchema(realmSchemaTmp);
             }
+
+            //realm.sharedRealm.updateSchema();
 
             final Map<Class<? extends RealmModel>, ColumnInfo> columnInfoMap = new HashMap<>(modelClasses.size());
             for (Class<? extends RealmModel> modelClass : modelClasses) {

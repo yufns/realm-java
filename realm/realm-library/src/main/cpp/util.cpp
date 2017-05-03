@@ -20,6 +20,7 @@
 #include <realm/util/assert.hpp>
 #include <realm/util/file.hpp>
 #include <realm/unicode.hpp>
+#include <object-store/src/object_store.hpp>
 #include "utf8.hpp"
 
 #include "util.hpp"
@@ -109,6 +110,25 @@ void ConvertException(JNIEnv* env, const char* file, int line)
     catch (realm::LogicError e) {
         ThrowException(env, IllegalState, e.what());
     }
+    catch (domain_error& e) { // FIXME: find a better exception
+        ss << e.what() << " in " << file << " line " << line;
+        ThrowException(env, IllegalState, ss.str());
+    }
+    catch (InvalidSchemaChangeException& e) {
+        ThrowMigrationNeededException(env, "<none>", e.what());
+    }
+    catch (InvalidSchemaVersionException& e) {
+        ThrowMigrationNeededException(env, "<none>", e.what());
+    }
+    catch (ObjectSchemaValidationException& e) {
+        ThrowMigrationNeededException(env, "<none>", e.what());
+    }
+    catch (SchemaValidationException& e) {
+        ThrowMigrationNeededException(env, "<none>", e.what());
+    }
+    catch (SchemaMismatchException& e) {
+        ThrowMigrationNeededException(env, "<none>", e.what());
+    }
     catch (std::logic_error e) {
         ThrowException(env, IllegalState, e.what());
     }
@@ -191,6 +211,18 @@ void ThrowException(JNIEnv* env, ExceptionKind exception, const std::string& cla
     }
 
     env->DeleteLocalRef(jExceptionClass);
+}
+
+void ThrowMigrationNeededException(JNIEnv* env, const std::string& path, const char* message) {
+    jclass cls = env->FindClass("io/realm/exceptions/RealmMigrationNeededException");
+
+    jmethodID constructor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jstring jpath = env->NewStringUTF(path.c_str());
+    jstring jmessage = env->NewStringUTF(message);
+    jobject exception = env->NewObject(cls, constructor, jpath, jmessage);
+    env->Throw(reinterpret_cast<jthrowable>(exception));
+    env->DeleteLocalRef(cls);
+    env->DeleteLocalRef(exception);
 }
 
 void ThrowRealmFileException(JNIEnv* env, const std::string& message, realm::RealmFileException::Kind kind)

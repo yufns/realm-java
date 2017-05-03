@@ -98,6 +98,7 @@ enum ExceptionKind {
     BadVersion,
     IllegalState,
     RealmFileError,
+    MigrationIsNeeded,
     // NOTE!!!!: Please also add test cases to io_realm_internal_TestUtil when introducing a
     // new exception kind.
     ExceptionKindMax // Always keep this as the last one!
@@ -108,6 +109,7 @@ void ThrowException(JNIEnv* env, ExceptionKind exception, const std::string& cla
                     const std::string& itemStr = "");
 void ThrowException(JNIEnv* env, ExceptionKind exception, const char* classStr);
 void ThrowNullValueException(JNIEnv* env, realm::Table* table, size_t col_ndx);
+void ThrowMigrationNeededException(JNIEnv* env, const std::string& path, const char* message);
 
 jclass GetClass(JNIEnv* env, const char* classStr);
 
