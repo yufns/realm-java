@@ -127,6 +127,8 @@ import rx.Observable;
  */
 public class Realm extends BaseRealm {
 
+    private static final String NULL_CONFIG_MSG = "A non-null RealmConfiguration must be provided";
+
     public static final String DEFAULT_REALM_NAME = RealmConfiguration.DEFAULT_REALM_NAME;
 
     private static RealmConfiguration defaultConfiguration;
@@ -134,11 +136,11 @@ public class Realm extends BaseRealm {
     /**
      * The constructor is private to enforce the use of the static one.
      *
-     * @param configuration the {@link RealmConfiguration} used to open the Realm.
+     * @param cache the {@link RealmCache} associated to this Realm instance.
      * @throws IllegalArgumentException if trying to open an encrypted Realm with the wrong key.
      */
-    Realm(RealmConfiguration configuration) {
-        super(configuration);
+    private Realm(RealmCache cache) {
+        super(cache);
     }
 
     /**
@@ -258,6 +260,8 @@ public class Realm extends BaseRealm {
      * @throws RealmMigrationNeededException if no migration has been provided by the default configuration and the
      * RealmObject classes or version has has changed so a migration is required.
      * @throws RealmFileException if an error happened when accessing the underlying Realm file.
+     * @throws io.realm.exceptions.DownloadingRealmInterruptedException if {@link SyncConfiguration.Builder#waitForInitialRemoteData()}
+     * was set and the thread opening the Realm was interrupted while the download was in progress.
      */
     public static Realm getDefaultInstance() {
         if (defaultConfiguration == null) {
@@ -275,13 +279,36 @@ public class Realm extends BaseRealm {
      * classes or version has has changed so a migration is required.
      * @throws RealmFileException if an error happened when accessing the underlying Realm file.
      * @throws IllegalArgumentException if a null {@link RealmConfiguration} is provided.
+     * @throws io.realm.exceptions.DownloadingRealmInterruptedException if {@link SyncConfiguration.Builder#waitForInitialRemoteData()}
+     * was set and the thread opening the Realm was interrupted while the download was in progress.
      * @see RealmConfiguration for details on how to configure a Realm.
      */
     public static Realm getInstance(RealmConfiguration configuration) {
         if (configuration == null) {
-            throw new IllegalArgumentException("A non-null RealmConfiguration must be provided");
+            throw new IllegalArgumentException(NULL_CONFIG_MSG);
         }
         return RealmCache.createRealmOrGetFromCache(configuration, Realm.class);
+    }
+
+    /**
+     * The creation of the first Realm instance per {@link RealmConfiguration} in a process can take some time as all
+     * initialization code need to run at that point (setting up the Realm, validating schemas and creating initial
+     * data). This method places the initialization work in a background thread and deliver the Realm instance
+     * to the caller thread asynchronously after the initialization is finished.
+     *
+     * @param configuration {@link RealmConfiguration} used to open the Realm.
+     * @param callback invoked to return the results.
+     * @throws IllegalArgumentException if a null {@link RealmConfiguration} or a null {@link Callback} is provided.
+     * @throws IllegalStateException if it is called from a non-Looper or {@link IntentService} thread.
+     * @return a {@link RealmAsyncTask} representing a cancellable task.
+     * @see Callback for more details.
+     */
+    public static RealmAsyncTask getInstanceAsync(RealmConfiguration configuration,
+                                                  Callback callback) {
+        if (configuration == null) {
+            throw new IllegalArgumentException(NULL_CONFIG_MSG);
+        }
+        return RealmCache.createRealmOrGetFromCacheAsync(configuration, callback, Realm.class);
     }
 
     /**
@@ -309,16 +336,18 @@ public class Realm extends BaseRealm {
     /**
      * Creates a {@link Realm} instance without checking the existence in the {@link RealmCache}.
      *
-     * @param configuration {@link RealmConfiguration} used to create the Realm.
-     * @param globalCacheArray if this is not {@code null} and contains an entry for current schema version,
-     * the {@link BaseRealm#schema#columnIndices} will be initialized with the copy of
-     * the entry. Otherwise, {@link BaseRealm#schema#columnIndices} will be populated
-     * from the Realm file.
+     * @param cache the {@link RealmCache} where to create the realm in.
      * @return a {@link Realm} instance.
      */
     static Realm createInstance(RealmConfiguration configuration, ColumnIndices[] globalCacheArray) {
         Realm realm = new Realm(configuration);
 
+/*        static Realm createInstance(RealmCache cache) {
+        RealmConfiguration configuration = cache.getConfiguration();
+        try {
+            return createAndValidateFromCache(cache);
+
+*/
         // TODO: caching - see createAndValidate
 
         realm.beginTransaction();
@@ -327,6 +356,9 @@ public class Realm extends BaseRealm {
 
         if (unversioned) {
             realm.setVersion(configuration.getSchemaVersion());
+/*
+            return createAndValidateFromCache(cache);
+*/
         }
 
         final RealmProxyMediator mediator = configuration.getSchemaMediator();
@@ -349,13 +381,15 @@ public class Realm extends BaseRealm {
         return realm;
     }
 
-    private static Realm createAndValidate(RealmConfiguration configuration, ColumnIndices[] globalCacheArray) {
-        Realm realm = new Realm(configuration);
+    private static Realm createAndValidateFromCache(RealmCache cache) {
+        Realm realm = new Realm(cache);
+        RealmConfiguration configuration = realm.configuration;
 
         final long currentVersion = realm.getVersion();
         final long requiredVersion = configuration.getSchemaVersion();
 
-        final ColumnIndices columnIndices = RealmCache.findColumnIndices(globalCacheArray, requiredVersion);
+        final ColumnIndices columnIndices = RealmCache.findColumnIndices(cache.getTypedColumnIndicesArray(),
+                requiredVersion);
 
         if (columnIndices != null) {
             // Copies global cache as a Realm local indices cache.
@@ -1867,6 +1901,25 @@ public class Realm extends BaseRealm {
          */
         interface OnError {
             void onError(Throwable error);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static abstract class Callback extends InstanceCallback<Realm> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public abstract void onSuccess(Realm realm);
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onError(Throwable exception) {
+            super.onError(exception);
         }
     }
 }
