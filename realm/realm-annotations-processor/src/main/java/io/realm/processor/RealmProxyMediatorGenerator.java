@@ -97,6 +97,7 @@ public class RealmProxyMediatorGenerator {
 
         emitFields(writer);
         emitCreateRealmObjectSchema(writer);
+        emitColumnInfoMethod(writer);
         emitValidateTableMethod(writer);
         emitGetFieldNamesMethod(writer);
         emitGetTableNameMethod(writer);
@@ -138,6 +139,25 @@ public class RealmProxyMediatorGenerator {
             @Override
             public void emitStatement(int i, JavaWriter writer) throws IOException {
                 writer.emitStatement("return %s.createRealmObjectSchema(realmSchema)", qualifiedProxyClasses.get(i));
+            }
+        }, writer);
+        writer.endMethod();
+        writer.emitEmptyLine();
+    }
+
+    private void emitColumnInfoMethod(JavaWriter writer) throws IOException {
+        writer.emitAnnotation("Override");
+        writer.beginMethod(
+                "ColumnInfo",
+                "createColumnInfo",
+                EnumSet.of(Modifier.PUBLIC),
+                "Class<? extends RealmModel>", "clazz", // Argument type & argument name
+                "SharedRealm", "sharedRealm");
+        emitMediatorShortCircuitSwitch(new ProxySwitchStatement() {
+            @Override
+            public void emitStatement(int i, JavaWriter writer) throws IOException {
+                writer.emitStatement("return %s.createColumnInfo(sharedRealm)",
+                        qualifiedProxyClasses.get(i));
             }
         }, writer);
         writer.endMethod();

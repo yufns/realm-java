@@ -361,6 +361,10 @@ public final class SharedRealm implements Closeable, NativeObject {
         nativeUpdateSchema(nativePtr, schemaNativePointer, version, null);
     }
 
+    public long getSchemaNativePtr() {
+        return nativeGetSchemaNativePtr(nativePtr);
+    }
+
     public void setAutoRefresh(boolean enabled) {
         capabilities.checkCanDeliverNotification(null);
         nativeSetAutoRefresh(nativePtr, enabled);
@@ -533,6 +537,8 @@ public final class SharedRealm implements Closeable, NativeObject {
     private static native boolean nativeCompact(long nativeSharedRealmPtr);
 
     private static native void nativeUpdateSchema(long nativePtr, long nativeSchemaPtr, long version, Object migration);
+
+    private static native long nativeGetSchemaNativePtr(long nativePtr);
 
     private static native void nativeSetAutoRefresh(long nativePtr, boolean enabled);
 

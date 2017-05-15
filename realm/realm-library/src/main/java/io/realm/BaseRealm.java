@@ -74,7 +74,7 @@ abstract class BaseRealm implements Closeable {
     private RealmCache realmCache;
     protected SharedRealm sharedRealm;
 
-    protected final StandardRealmSchema schema;
+    protected final OsRealmSchema schema; // FIXME: remove!
 
     // Create a realm instance and associate it to a RealmCache.
     BaseRealm(RealmCache cache) {
@@ -98,7 +98,7 @@ abstract class BaseRealm implements Closeable {
                                 }
                             }
                         }, true);
-        this.schema = new StandardRealmSchema(this);
+        this.schema = new OsRealmSchema();
     }
 
     // only used during migrations
@@ -106,7 +106,7 @@ abstract class BaseRealm implements Closeable {
         this.threadId = Thread.currentThread().getId();
         this.configuration = realm.getConfiguration();
         this.sharedRealm = realm;
-        this.schema = new StandardRealmSchema(this);
+        this.schema = new OsRealmSchema();
     }
 
     /**
@@ -513,7 +513,7 @@ abstract class BaseRealm implements Closeable {
      * @return The {@link RealmSchema} for this Realm.
      */
     public RealmSchema getSchema() {
-        return schema;
+        return new OsRealmSchema(sharedRealm.getSchemaNativePtr());
     }
 
     // Used by RealmList/RealmResults, to create RealmObject from a Collection.

@@ -551,6 +551,15 @@ JNIEXPORT jboolean JNICALL Java_io_realm_internal_SharedRealm_nativeCompact(JNIE
     return JNI_FALSE;
 }
 
+JNIEXPORT jlong JNICALL
+Java_io_realm_internal_SharedRealm_nativeGetSchemaNativePtr(JNIEnv*, jclass, jlong shared_realm_ptr)
+{
+    TR_ENTER_PTR(shared_realm_ptr)
+    auto& shared_realm = *(reinterpret_cast<SharedRealm*>(shared_realm_ptr));
+    auto schema = new Schema(shared_realm->schema());
+    return reinterpret_cast<jlong>(schema);
+}
+
 JNIEXPORT void JNICALL Java_io_realm_internal_SharedRealm_nativeUpdateSchema(JNIEnv* env, jclass,
                                                                              jlong shared_realm_ptr, jlong schema_ptr,
                                                                              jlong version,
@@ -562,7 +571,7 @@ JNIEXPORT void JNICALL Java_io_realm_internal_SharedRealm_nativeUpdateSchema(JNI
         auto* schema = reinterpret_cast<Schema*>(schema_ptr);
 
         if (migration == nullptr) {
-            shared_realm->update_schema(*schema, static_cast<uint64_t>(version), nullptr, true);
+            shared_realm->update_schema(std::move(*schema), static_cast<uint64_t>(version), nullptr, true);
         }
         else {
             JavaMethod migration_function(env, migration, "migrate", "(io/realm/DynamicRealm;JJ)V");
@@ -583,7 +592,7 @@ JNIEXPORT void JNICALL Java_io_realm_internal_SharedRealm_nativeUpdateSchema(JNI
                     throw std::invalid_argument("migrate() failed");
                 }
             };
-            shared_realm->update_schema(std::move(*schema), version, std::move(callback));
+            shared_realm->update_schema(std::move(*schema), static_cast<uint64_t>(version), std::move(callback));
         }
     }
     CATCH_STD()

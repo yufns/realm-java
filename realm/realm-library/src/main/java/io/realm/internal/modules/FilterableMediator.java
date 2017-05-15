@@ -82,6 +82,12 @@ public class FilterableMediator extends RealmProxyMediator {
     }
 
     @Override
+    public ColumnInfo createColumnInfo(Class<? extends RealmModel> clazz, SharedRealm sharedRealm) {
+        checkSchemaHasClass(clazz);
+        return originalMediator.createColumnInfo(clazz, sharedRealm);
+    }
+
+    @Override
     public ColumnInfo validateTable(Class<? extends RealmModel> clazz, SharedRealm sharedRealm,
             boolean allowExtraColumns) {
         checkSchemaHasClass(clazz);

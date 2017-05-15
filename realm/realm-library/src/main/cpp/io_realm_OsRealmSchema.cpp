@@ -58,3 +58,15 @@ JNIEXPORT void JNICALL Java_io_realm_OsRealmSchema_nativeClose(JNIEnv*, jclass, 
     Schema* schema = reinterpret_cast<Schema*>(nativePtr);
     delete schema;
 }
+
+JNIEXPORT jboolean JNICALL
+Java_io_realm_OsRealmSchema_nativeHasClass(JNIEnv *env, jclass, jlong nativePtr, jstring className_) {
+    TR_ENTER()
+    try {
+        auto schema = reinterpret_cast<Schema*>(nativePtr);
+        JStringAccessor class_name(env, className_);
+        return to_jbool(schema->find(class_name) != schema->end());
+    }
+    CATCH_STD()
+    return JNI_FALSE;
+}

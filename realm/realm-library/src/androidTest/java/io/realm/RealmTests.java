@@ -18,8 +18,6 @@ package io.realm;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
@@ -48,7 +46,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -271,7 +268,7 @@ public class RealmTests {
     @Test
     public void getInstance() {
         assertNotNull("Realm.getInstance unexpectedly returns null", realm);
-        assertTrue("Realm.getInstance does not contain expected table", realm.getSchema().contains(AllTypes.CLASS_NAME));
+        assertTrue("Realm.getInstance does not contain expected table", realm.schema.contains(AllTypes.CLASS_NAME));
     }
 
     @Test

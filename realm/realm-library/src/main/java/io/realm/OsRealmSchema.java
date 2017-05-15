@@ -107,12 +107,17 @@ class OsRealmSchema extends RealmSchema {
         this.nativePtr = nativeCreate();
     }
 
+    OsRealmSchema(long nativePtr) {
+        this.nativePtr = nativePtr;
+    }
+
     OsRealmSchema(Creator creator) {
         Set<RealmObjectSchema> realmObjectSchemas = creator.getAll();
         long[] schemaNativePointers = new long[realmObjectSchemas.size()];
         int i = 0;
         for (RealmObjectSchema schema : realmObjectSchemas) {
             schemaNativePointers[i++] = ((OsRealmObjectSchema) schema).getNativePtr();
+            dynamicClassToSchema.put(schema.getClassName(), schema);
         }
         this.nativePtr = nativeCreateFromList(schemaNativePointers);
     }
@@ -185,7 +190,7 @@ class OsRealmSchema extends RealmSchema {
      */
     @Override
     public boolean contains(String className) {
-        return dynamicClassToSchema.containsKey(className);
+        return dynamicClassToSchema.containsKey(className) || nativeHasClass(nativePtr, className);
     }
 
     @Override
@@ -217,4 +222,5 @@ class OsRealmSchema extends RealmSchema {
     static native long nativeCreateFromList(long[] objectSchemaPtrs);
     static native long nativeCreate();
     static native void nativeClose(long nativePtr);
+    static native boolean nativeHasClass(long nativePtr, String className);
 }

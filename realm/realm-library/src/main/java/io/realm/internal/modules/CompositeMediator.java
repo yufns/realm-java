@@ -67,6 +67,12 @@ public class CompositeMediator extends RealmProxyMediator {
     }
 
     @Override
+    public ColumnInfo createColumnInfo(Class<? extends RealmModel> clazz, SharedRealm sharedRealm) {
+        RealmProxyMediator mediator = getMediator(clazz);
+        return mediator.createColumnInfo(clazz, sharedRealm);
+    }
+
+    @Override
     public ColumnInfo validateTable(Class<? extends RealmModel> clazz, SharedRealm sharedRealm,
             boolean allowExtraColumns) {
         RealmProxyMediator mediator = getMediator(clazz);

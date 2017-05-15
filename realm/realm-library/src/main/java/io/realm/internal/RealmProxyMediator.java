@@ -54,6 +54,17 @@ public abstract class RealmProxyMediator {
      */
     public abstract RealmObjectSchema createRealmObjectSchema(Class<? extends RealmModel> clazz, RealmSchema realmSchema);
 
+
+    /**
+     * Prepares caching.
+     *
+     * @param clazz the {@link RealmObject} model class to cache.
+     * @param sharedRealm the wrapper object of underlying native database.
+     * @return column indices to be cached.
+     */
+    public abstract ColumnInfo createColumnInfo(Class<? extends RealmModel> clazz,
+            SharedRealm sharedRealm);
+
     /**
      * Validates the backing table in Realm for the given RealmObject class.
      *

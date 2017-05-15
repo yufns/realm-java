@@ -118,6 +118,7 @@ public class RealmProxyClassGenerator {
         emitPersistedFieldAccessors(writer);
         emitBacklinkFieldAccessors(writer);
         emitCreateRealmObjectSchemaMethod(writer);
+        emitColumnInfoMethod(writer);
         emitValidateTableMethod(writer);
         emitGetTableNameMethod(writer);
         emitGetFieldNamesMethod(writer);
@@ -640,6 +641,26 @@ public class RealmProxyClassGenerator {
         writer.emitStatement("return realmSchema.get(\"" + this.simpleClassName + "\")");
         writer.endMethod()
                 .emitEmptyLine();
+    }
+
+    private void emitColumnInfoMethod(JavaWriter writer) throws IOException {
+        writer.beginMethod(
+                columnInfoClassName(),        // Return type
+                "createColumnInfo",           // Method name
+                EnumSet.of(Modifier.PUBLIC, Modifier.STATIC), // Modifiers
+                "SharedRealm", "sharedRealm"  // Argument type & argument name
+        );
+        writer.emitStatement(
+                "Table table = sharedRealm.getTable(\"%s%s\")",
+                Constants.TABLE_PREFIX,
+                this.simpleClassName);
+        writer.emitStatement(
+                "final %1$s columnInfo = new %1$s(sharedRealm.getPath(), table)", columnInfoClassName())
+                .emitEmptyLine();
+        writer.emitStatement("return %s", "columnInfo");
+
+        writer.endMethod();
+        writer.emitEmptyLine();
     }
 
     private void emitValidateTableMethod(JavaWriter writer) throws IOException {
