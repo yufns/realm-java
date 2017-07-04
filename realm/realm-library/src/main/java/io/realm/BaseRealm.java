@@ -658,7 +658,6 @@ abstract class BaseRealm implements Closeable {
                     // Create a DynamicRealm WITHOUT putting it into a RealmCache to avoid recursive locks and call init
                     // steps multiple times (copy asset file / initialData transaction).
                     realm = DynamicRealm.createInstance(configuration);
-                    realm.beginTransaction();
                     SharedRealm.MigrationCallback migrationCallback = null;
                     if (configuration.getMigration() != null) {
                         migrationCallback = new SharedRealm.MigrationCallback() {
@@ -669,13 +668,8 @@ abstract class BaseRealm implements Closeable {
                             }
                         };
                     }
-                    realm.sharedRealm.updateSchema(schemaInfo, configuration.getSchemaVersion(), migrationCallback);
-                    realm.commitTransaction();
-                } catch (RuntimeException e) {
-                    if (realm != null) {
-                        realm.cancelTransaction();
-                    }
-                    throw e;
+                    realm.sharedRealm.updateSchema(schemaInfo, configuration.getSchemaVersion(), migrationCallback,
+                            null);
                 } finally {
                     if (realm != null) {
                         realm.close();

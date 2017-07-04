@@ -171,7 +171,7 @@ public final class SharedRealm implements Closeable, NativeObject {
 
     /**
      * The migration callback which will be called when the expected schema doesn't match the existing one in
-     * {@link #updateSchema(OsSchemaInfo, long, MigrationCallback)}.
+     * {@link #updateSchema(OsSchemaInfo, long, MigrationCallback, InitializationCallback)}.
      */
     public interface MigrationCallback {
 
@@ -179,11 +179,21 @@ public final class SharedRealm implements Closeable, NativeObject {
          * Call back function.
          *
          * @param sharedRealm the same {@link SharedRealm} instance of which
-         * {@link #updateSchema(OsSchemaInfo, long, MigrationCallback)} was called on.
+         * {@link #updateSchema(OsSchemaInfo, long, MigrationCallback, InitializationCallback)} was called on.
          * @param oldVersion the schema version of the existing Realm file.
          * @param newVersion the expected schema version after migration.
          */
         void onMigrationNeeded(SharedRealm sharedRealm, long oldVersion, long newVersion);
+    }
+
+    /**
+     * Callback function to be executed when the schema is created.
+     */
+    public interface InitializationCallback {
+        /**
+         * @param sharedRealm a {@link SharedRealm} instance which is in transaction state.
+         */
+        void onInit(SharedRealm sharedRealm);
     }
 
     private final SchemaVersionListener schemaChangeListener;
@@ -232,11 +242,14 @@ public final class SharedRealm implements Closeable, NativeObject {
 
         final boolean enableCaching = false; // Handled in Java currently
         final boolean enableFormatUpgrade = true;
+        final SchemaMode schemaMode = syncRealmUrl != null ? SchemaMode.SCHEMA_MODE_ADDITIVE : (
+                config.shouldDeleteRealmIfMigrationNeeded() ?
+                        SchemaMode.SCHEMA_MODE_RESET_FILE : SchemaMode.SCHEMA_MODE_MANUAL);
 
         long nativeConfigPtr = nativeCreateConfig(
                 config.getPath(),
                 config.getEncryptionKey(),
-                syncRealmUrl != null ? SchemaMode.SCHEMA_MODE_ADDITIVE.getNativeValue() : SchemaMode.SCHEMA_MODE_MANUAL.getNativeValue(),
+                schemaMode.getNativeValue(),
                 config.getDurability() == Durability.MEM_ONLY,
                 enableCaching,
                 config.getSchemaVersion(),
@@ -392,8 +405,9 @@ public final class SharedRealm implements Closeable, NativeObject {
      * @param version the target version.
      * @param migrationCallback the callback will be called when the schema doesn't match.
      */
-    public void updateSchema(OsSchemaInfo schemaInfo, long version, MigrationCallback migrationCallback) {
-        nativeUpdateSchema(nativePtr, schemaInfo.getNativePtr(), version, migrationCallback);
+    public void updateSchema(OsSchemaInfo schemaInfo, long version, MigrationCallback migrationCallback,
+                             InitializationCallback initializationCallback) {
+        nativeUpdateSchema(nativePtr, schemaInfo.getNativePtr(), version, migrationCallback, initializationCallback);
     }
 
     public void setAutoRefresh(boolean enabled) {
@@ -518,6 +532,16 @@ public final class SharedRealm implements Closeable, NativeObject {
         callback.onMigrationNeeded(this, oldVersion, newVersion);
     }
 
+    /**
+     * Called from JNI when the schema is created the first time.
+     *
+     * @param callback to be executed with a given in-transact {@link SharedRealm}.
+     */
+    @KeepMember
+    private void runInitializationCallback(InitializationCallback callback) {
+        callback.onInit(this);
+    }
+
     private static native void nativeInit(String temporaryDirectoryPath);
 
     // Keep last session as an 'object' to avoid any reference to sync code
@@ -587,7 +611,8 @@ public final class SharedRealm implements Closeable, NativeObject {
     private static native boolean nativeCompact(long nativeSharedRealmPtr);
 
     private native void nativeUpdateSchema(long nativePtr, long nativeSchemaPtr, long version,
-                                           MigrationCallback callback);
+                                           MigrationCallback migrationCallback,
+                                           InitializationCallback initializationCallback);
 
     private static native void nativeSetAutoRefresh(long nativePtr, boolean enabled);
 
