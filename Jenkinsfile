@@ -22,6 +22,17 @@ try {
 		   ])
 	}
 
+    // Append the short SHA1 to the version.txt so the snapshot release can have the commit info.
+    stage("versioning") {
+        // TODO: Use ${env.GIT_COMMIT} if we have git plugin enabled
+        def gitCommit = sh (
+                script: 'git rev-parse --short HEAD',
+                returnStdout: true
+                ).trim()
+        sh "sed -i '1 s/SNAPSHOT/${gitCommit}-SNAPSHOT/' version.txt "
+        sh "cat version.txt"
+    }
+
 	def buildEnv
 	def rosEnv
 	stage('Docker build') {
@@ -91,7 +102,7 @@ try {
 
             // TODO: add support for running monkey on the example apps
 
-            if (env.BRANCH_NAME == 'master') {
+            if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'develop') {
               stage('Collect metrics') {
                 collectAarMetrics()
               }
