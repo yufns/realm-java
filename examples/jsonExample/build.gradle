@@ -28,6 +28,6 @@ android {
 }
 
 dependencies {
-    compileOnly 'org.projectlombok:lombok:1.16.6'
+    compile 'org.projectlombok:lombok:1.16.6'
     annotationProcessor 'org.projectlombok:lombok:1.16.6'
 }
